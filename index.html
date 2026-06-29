@@ -1,0 +1,842 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+  <!-- Primary Meta Tags -->
+  <meta name="title" content="StereoGS - Sparse-View 3D Gaussian Splatting via Stereo Priors">
+  <meta name="description" content="StereoGS integrates stereo priors into sparse-view 3D Gaussian Splatting via Stereo Depth Regularization, Gradient-Aware Opacity Decay, and Consistency-Aware Dense Initialization, achieving state-of-the-art novel view synthesis without inference overhead.">
+  <meta name="keywords" content="StereoGS, 3D Gaussian Splatting, Sparse-View, Novel View Synthesis, Stereo Priors, FoundationStereo, MVSAnywhere, NeRF, ECCV 2026">
+  <meta name="author" content="Wenhao Yuan, Yiyuan Ge, Deli Cai">
+  <meta name="robots" content="index, follow">
+  <meta name="language" content="English">
+
+  <!-- Open Graph / Facebook -->
+  <meta property="og:type" content="article">
+  <meta property="og:site_name" content="South China University of Technology">
+  <meta property="og:title" content="StereoGS: Sparse-View 3D Gaussian Splatting via Stereo Priors">
+  <meta property="og:description" content="A novel sparse-view 3DGS framework that integrates stereo priors to establish reliable cross-view consistency. SOTA on LLFF, DTU, Mip-NeRF360, and Blender with no inference overhead.">
+  <meta property="og:url" content="https://stereogs.github.io/">
+  <meta property="og:image" content="static/images/overview.jpg">
+  <meta property="og:image:width" content="1920">
+  <meta property="og:image:height" content="649">
+  <meta property="og:image:alt" content="StereoGS Framework Overview">
+  <meta property="article:published_time" content="2026-06-28T00:00:00.000Z">
+  <meta property="article:author" content="Wenhao Yuan">
+  <meta property="article:author" content="Yiyuan Ge">
+  <meta property="article:author" content="Deli Cai">
+  <meta property="article:section" content="Research">
+  <meta property="article:tag" content="3D Gaussian Splatting">
+  <meta property="article:tag" content="Sparse-View Novel View Synthesis">
+  <meta property="article:tag" content="Stereo Priors">
+  <meta property="article:tag" content="ECCV 2026">
+
+  <!-- Twitter -->
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:site" content="@stereogs">
+  <meta name="twitter:creator" content="@stereogs">
+  <meta name="twitter:title" content="StereoGS: Sparse-View 3D Gaussian Splatting via Stereo Priors">
+  <meta name="twitter:description" content="Integrating stereo priors into sparse-view 3DGS. SOTA on LLFF/DTU/Mip-NeRF360/Blender with zero inference overhead.">
+  <meta name="twitter:image" content="static/images/overview.jpg">
+  <meta name="twitter:image:alt" content="StereoGS Framework Overview">
+
+  <!-- Academic/Research Specific -->
+  <meta name="citation_title" content="StereoGS: Sparse-View 3D Gaussian Splatting via Stereo Priors">
+  <meta name="citation_author" content="Yuan, Wenhao">
+  <meta name="citation_author" content="Ge, Yiyuan">
+  <meta name="citation_author" content="Cai, Deli">
+  <meta name="citation_publication_date" content="2026">
+  <meta name="citation_conference_title" content="European Conference on Computer Vision (ECCV)">
+  <meta name="citation_pdf_url" content="static/pdfs/stereogs_paper.pdf">
+
+  <!-- Additional SEO -->
+  <meta name="theme-color" content="#5b21b6">
+  <meta name="msapplication-TileColor" content="#5b21b6">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="default">
+
+  <!-- Preconnect for performance -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="preconnect" href="https://ajax.googleapis.com">
+  <link rel="preconnect" href="https://documentcloud.adobe.com">
+  <link rel="preconnect" href="https://cdn.jsdelivr.net">
+
+
+  <title>StereoGS: Sparse-View 3D Gaussian Splatting via Stereo Priors | ECCV 2026</title>
+
+  <!-- Favicon and App Icons -->
+  <link rel="icon" type="image/x-icon" href="static/images/favicon.ico">
+  <link rel="icon" type="image/svg+xml" href="static/images/favicon.svg">
+  <link rel="apple-touch-icon" href="static/images/favicon.ico">
+
+  <!-- Critical CSS - Load synchronously -->
+  <link rel="stylesheet" href="static/css/bulma.min.css">
+  <link rel="stylesheet" href="static/css/index.css">
+
+  <!-- Non-critical CSS - Load asynchronously -->
+  <link rel="preload" href="static/css/bulma-carousel.min.css" as="style" onload="this.onload=null;this.rel='stylesheet'">
+  <link rel="preload" href="static/css/bulma-slider.min.css" as="style" onload="this.onload=null;this.rel='stylesheet'">
+  <link rel="preload" href="static/css/fontawesome.all.min.css" as="style" onload="this.onload=null;this.rel='stylesheet'">
+  <link rel="preload" href="https://cdn.jsdelivr.net/gh/jpswalsh/academicons@1/css/academicons.min.css" as="style" onload="this.onload=null;this.rel='stylesheet'">
+
+  <!-- Fallback for browsers that don't support preload -->
+  <noscript>
+    <link rel="stylesheet" href="static/css/bulma-carousel.min.css">
+    <link rel="stylesheet" href="static/css/bulma-slider.min.css">
+    <link rel="stylesheet" href="static/css/fontawesome.all.min.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/jpswalsh/academicons@1/css/academicons.min.css">
+  </noscript>
+
+  <!-- Fonts - Optimized loading -->
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+
+  <!-- Defer non-critical JavaScript -->
+  <script defer src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+  <script defer src="https://documentcloud.adobe.com/view-sdk/main.js"></script>
+  <script defer src="static/js/fontawesome.all.min.js"></script>
+  <script defer src="static/js/bulma-carousel.min.js"></script>
+  <script defer src="static/js/bulma-slider.min.js"></script>
+  <script defer src="static/js/index.js"></script>
+
+  <!-- Structured Data for Academic Papers -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "ScholarlyArticle",
+    "headline": "StereoGS: Sparse-View 3D Gaussian Splatting via Stereo Priors",
+    "description": "We propose StereoGS, a novel sparse-view 3D Gaussian Splatting framework that integrates stereo priors to establish reliable cross-view consistency, achieving state-of-the-art performance on LLFF, DTU, Mip-NeRF360, and Blender datasets without additional inference overhead.",
+    "author": [
+      {
+        "@type": "Person",
+        "name": "Wenhao Yuan",
+        "affiliation": {"@type": "Organization", "name": "South China University of Technology"}
+      },
+      {
+        "@type": "Person",
+        "name": "Yiyuan Ge",
+        "affiliation": {"@type": "Organization", "name": "South China University of Technology"}
+      },
+      {
+        "@type": "Person",
+        "name": "Deli Cai",
+        "affiliation": {"@type": "Organization", "name": "South China University of Technology"}
+      }
+    ],
+    "datePublished": "2026-06-28",
+    "publisher": {"@type": "Organization", "name": "European Conference on Computer Vision (ECCV)"},
+    "url": "https://stereogs.github.io/",
+    "image": "static/images/overview.jpg",
+    "keywords": ["3D Gaussian Splatting", "Sparse-View", "Novel View Synthesis", "Stereo Priors", "FoundationStereo", "MVSAnywhere", "ECCV 2026"],
+    "abstract": "3D Gaussian Splatting (3DGS) has achieved remarkable success in real-time novel view synthesis, yet it suffers from severe overfitting under sparse-view settings due to insufficient geometric constraints. While recent methods introduce monocular depth priors to mitigate this, they inherently struggle with scale ambiguity and cross-view inconsistency, leading to defective geometry. In this paper, we propose StereoGS, a novel sparse-view 3DGS framework that integrates stereo priors to establish reliable cross-view consistency. Unlike scale-agnostic monocular constraints, StereoGS introduces a Stereo Depth Regularization by constructing virtual stereo pairs during optimization and leveraging a foundation stereo model to enforce absolute scale and cross-view-consistent structures. To further suppress overfitting and eliminate redundant primitives, we design a Gradient-Aware Opacity Decay strategy that dynamically penalizes Gaussians based on their relative opacity gradient magnitudes. Combined with a Consistency-Aware Dense Initialization using zero-shot multi-view depth estimation, StereoGS effectively anchors primitives to accurate scene surfaces. Extensive experiments on LLFF, DTU, Mip-NeRF360, and Blender datasets demonstrate that StereoGS achieves state-of-the-art performance in sparse-view settings without incurring any additional inference overhead.",
+    "isAccessibleForFree": true,
+    "license": "https://creativecommons.org/licenses/by/4.0/",
+    "mainEntity": {"@type": "WebPage", "@id": "https://stereogs.github.io/"},
+    "about": [
+      {"@type": "Thing", "name": "3D Gaussian Splatting"},
+      {"@type": "Thing", "name": "Novel View Synthesis"},
+      {"@type": "Thing", "name": "Stereo Vision"}
+    ]
+  }
+  </script>
+
+  <!-- Website/Organization Structured Data -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "Organization",
+    "name": "South China University of Technology",
+    "url": "https://www.scut.edu.cn/en/",
+    "logo": "static/images/favicon.ico",
+    "sameAs": [
+      "https://github.com/StringerYwh00/StereoGS"
+    ]
+  }
+  </script>
+</head>
+<body>
+
+
+  <!-- Scroll to Top Button -->
+  <button class="scroll-to-top" onclick="scrollToTop()" title="Scroll to top" aria-label="Scroll to top">
+    <i class="fas fa-chevron-up"></i>
+  </button>
+
+  <!-- More Works Dropdown -->
+  <div class="more-works-container">
+    <button class="more-works-btn" onclick="toggleMoreWorks()" title="View Related Works">
+      <i class="fas fa-flask"></i>
+      Related Works
+      <i class="fas fa-chevron-down dropdown-arrow"></i>
+    </button>
+    <div class="more-works-dropdown" id="moreWorksDropdown">
+      <div class="dropdown-header">
+        <h4>Related Sparse-View 3DGS Works</h4>
+        <button class="close-btn" onclick="toggleMoreWorks()">
+          <i class="fas fa-times"></i>
+        </button>
+      </div>
+      <div class="works-list">
+        <a href="https://arxiv.org/abs/2403.18315" class="work-item" target="_blank">
+          <div class="work-info">
+            <h5>DNGaussian: Sparse-View 3DGS via Geometry-Regularized Online Color Map Distillation</h5>
+            <p>Distills geometric priors from a pre-trained monocular depth estimator for sparse-view 3DGS.</p>
+            <span class="work-venue">CVPR 2024</span>
+          </div>
+          <i class="fas fa-external-link-alt"></i>
+        </a>
+        <a href="https://arxiv.org/abs/2312.01751" class="work-item" target="_blank">
+          <div class="work-info">
+            <h5>FSGS: Real-Time Few-Shot 3DGS using Depth Prior</h5>
+            <p>Few-shot 3DGS with monocular depth supervision and Gaussian Unpooling for densification.</p>
+            <span class="work-venue">CVPR 2024</span>
+          </div>
+          <i class="fas fa-external-link-alt"></i>
+        </a>
+        <a href="https://arxiv.org/abs/2408.04854" class="work-item" target="_blank">
+          <div class="work-info">
+            <h5>Binocular3DGS: Binocular 3DGS for Fast and Stereosopic Novel View Synthesis</h5>
+            <p>Photometric warping of rendered views to enforce binocular cross-view consistency.</p>
+            <span class="work-venue">ECCV 2024</span>
+          </div>
+          <i class="fas fa-external-link-alt"></i>
+        </a>
+        <a href="https://arxiv.org/abs/2406.10450" class="work-item" target="_blank">
+          <div class="work-info">
+            <h5>MVPGS: Excavating Multi-View Priors for Gaussian Splatting from Sparse Training Views</h5>
+            <p>Uses MVS depth priors for point-cloud initialization to relieve overfitting in sparse-view 3DGS.</p>
+            <span class="work-venue">ECCV 2024</span>
+          </div>
+          <i class="fas fa-external-link-alt"></i>
+        </a>
+        <a href="https://arxiv.org/abs/2503.06606" class="work-item" target="_blank">
+          <div class="work-info">
+            <h5>NexusGS: Sparse-View 3DGS via Epipolar Geometry-Based Initialization</h5>
+            <p>Initializes 3DGS via traditional epipolar geometry, refined by photometric constraints.</p>
+            <span class="work-venue">2025</span>
+          </div>
+          <i class="fas fa-external-link-alt"></i>
+        </a>
+      </div>
+    </div>
+  </div>
+
+  <main id="main-content">
+
+  <!-- ==================== HERO ==================== -->
+  <section class="hero">
+    <div class="hero-body">
+      <div class="container is-max-desktop">
+        <div class="columns is-centered">
+          <div class="column has-text-centered">
+            <h1 class="title is-1 publication-title">
+              <span class="stereogs-brand">StereoGS</span>
+            </h1>
+            <h2 class="subtitle is-4 publication-subtitle">
+              Sparse-View 3D Gaussian Splatting via Stereo Priors
+            </h2>
+
+            <!-- Conference badge -->
+            <div class="venue-badge">
+              <span class="venue-tag">ECCV 2026</span>
+            </div>
+
+            <div class="is-size-5 publication-authors">
+              <span class="author-block">
+                <a href="https://orcid.org/0009-0005-5985-761X" target="_blank">Wenhao Yuan</a><sup>1</sup>,</span>
+              <span class="author-block">
+                <a href="https://orcid.org/0009-0006-5442-1865" target="_blank">Yiyuan Ge</a><sup>1</sup>,</span>
+              <span class="author-block">
+                <a href="https://orcid.org/0009-0000-0179-2781" target="_blank">Deli Cai</a><sup>1,*</sup>
+              </span>
+            </div>
+
+            <div class="is-size-6 publication-authors">
+              <span class="author-block">
+                <sup>1</sup> South China University of Technology
+              </span>
+            </div>
+            <div class="is-size-6 publication-authors">
+              <span class="eql-cntrb">
+                <small><sup>*</sup> Corresponding author</small>
+              </span>
+            </div>
+
+            <div class="column has-text-centered">
+              <div class="publication-links">
+                <span class="link-block">
+                  <a href="static/pdfs/stereogs_paper.pdf" target="_blank"
+                  class="external-link button is-normal is-rounded is-dark">
+                    <span class="icon"><i class="fas fa-file-pdf"></i></span>
+                    <span>Paper</span>
+                  </a>
+                </span>
+
+                <span class="link-block">
+                  <a href="static/pdfs/stereogs_supp.pdf" target="_blank"
+                  class="external-link button is-normal is-rounded is-dark">
+                    <span class="icon"><i class="fas fa-file-pdf"></i></span>
+                    <span>Supplementary</span>
+                  </a>
+                </span>
+
+                <span class="link-block">
+                  <a href="https://github.com/StringerYwh00/StereoGS" target="_blank"
+                  class="external-link button is-normal is-rounded is-dark">
+                    <span class="icon"><i class="fab fa-github"></i></span>
+                    <span>Code</span>
+                  </a>
+                </span>
+
+                <span class="link-block">
+                  <a href="https://arxiv.org/abs/2506.XXXXX" target="_blank"
+                  class="external-link button is-normal is-rounded is-dark">
+                    <span class="icon"><i class="ai ai-arxiv"></i></span>
+                    <span>arXiv</span>
+                  </a>
+                </span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+
+  <!-- ==================== TL;DR ==================== -->
+  <section class="section hero is-light tldr-section">
+    <div class="container is-max-desktop">
+      <div class="columns is-centered has-text-centered">
+        <div class="column is-four-fifths">
+          <h2 class="title is-3">TL;DR</h2>
+          <p class="tldr-lead">
+            <strong>StereoGS</strong> brings <em>stereo priors</em> into sparse-view 3D Gaussian Splatting,
+            enforcing <strong>absolute scale</strong> and <strong>cross-view consistency</strong> through
+            virtual stereo pairs, a gradient-aware opacity decay, and a zero-shot MVS initialization.
+            It achieves <strong>state-of-the-art</strong> results on LLFF, DTU, Mip-NeRF360 and Blender —
+            with <strong>zero inference overhead</strong> compared to vanilla 3DGS.
+          </p>
+
+          <div class="columns is-centered highlights-row">
+            <div class="column">
+              <div class="highlight-card">
+                <div class="highlight-icon"><i class="fas fa-cube"></i></div>
+                <h3 class="highlight-title">Stereo Depth Regularization</h3>
+                <p>Virtual stereo pairs + FoundationStereo deliver absolute-scale, cross-view-consistent depth supervision.</p>
+              </div>
+            </div>
+            <div class="column">
+              <div class="highlight-card">
+                <div class="highlight-icon"><i class="fas fa-sliders"></i></div>
+                <h3 class="highlight-title">Gradient-Aware Opacity Decay</h3>
+                <p>Exponential soft-thresholding of <em>relative</em> opacity gradients prunes floaters while preserving surface Gaussians.</p>
+              </div>
+            </div>
+            <div class="column">
+              <div class="highlight-card">
+                <div class="highlight-icon"><i class="fas fa-seedling"></i></div>
+                <h3 class="highlight-title">Dense MVS Initialization</h3>
+                <p>Zero-shot MVSAnywhere + cross-view reprojection filtering yields a dense, view-consistent point cloud.</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+
+  <!-- ==================== TEASER / FRAMEWORK ==================== -->
+  <section class="hero teaser">
+    <div class="container is-max-desktop">
+      <div class="hero-body">
+        <img src="static/images/overview.jpg" alt="StereoGS framework overview" class="teaser-image" loading="lazy"/>
+        <h2 class="subtitle has-text-centered">
+          <strong>Framework overview.</strong> StereoGS comprises three components:
+          (a) <em>Stereo Depth Regularization</em> synthesizes virtual stereo pairs to extract stereo depth,
+          enforcing explicit geometric consistency between paired views during optimization.
+          (b) <em>Gradient-Aware Opacity Decay</em> dynamically penalizes Gaussian opacities according to their
+          gradients, removing redundant primitives and mitigating overfitting.
+          (c) <em>Consistency-Aware Dense Initialization</em> leverages multi-view depth priors and geometric
+          filtering to construct a dense, reliable geometric foundation.
+        </h2>
+      </div>
+    </div>
+  </section>
+
+
+  <!-- ==================== ABSTRACT ==================== -->
+  <section class="section hero is-light">
+    <div class="container is-max-desktop">
+      <div class="columns is-centered has-text-centered">
+        <div class="column is-four-fifths">
+          <h2 class="title is-3">Abstract</h2>
+          <div class="content has-text-justified abstract-content">
+            <p>
+              3D Gaussian Splatting (3DGS) has achieved remarkable success in real-time novel view synthesis,
+              yet it suffers from severe overfitting under sparse-view settings due to insufficient geometric
+              constraints. While recent methods introduce monocular depth priors to mitigate this, they
+              inherently struggle with <em>scale ambiguity</em> and <em>cross-view inconsistency</em>,
+              leading to defective geometry.
+            </p>
+            <p>
+              In this paper, we propose <strong>StereoGS</strong>, a novel sparse-view 3DGS framework that
+              integrates <em>stereo priors</em> to establish reliable cross-view consistency. Unlike
+              scale-agnostic monocular constraints, StereoGS introduces a <strong>Stereo Depth
+              Regularization</strong> by constructing virtual stereo pairs during optimization and leveraging
+              a foundation stereo model to enforce absolute scale and cross-view-consistent structures.
+            </p>
+            <p>
+              To further suppress overfitting and eliminate redundant primitives, we design a
+              <strong>Gradient-Aware Opacity Decay</strong> strategy that dynamically penalizes Gaussians
+              based on their relative opacity gradient magnitudes. Combined with a
+              <strong>Consistency-Aware Dense Initialization</strong> using zero-shot multi-view depth
+              estimation, StereoGS effectively anchors primitives to accurate scene surfaces. Extensive
+              experiments on <strong>LLFF, DTU, Mip-NeRF360, and Blender</strong> datasets demonstrate that
+              StereoGS achieves state-of-the-art performance in sparse-view settings without incurring any
+              additional inference overhead.
+            </p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+
+  <!-- ==================== METHOD ==================== -->
+  <section class="section method-section">
+    <div class="container is-max-desktop">
+      <h2 class="title is-3 has-text-centered">Method</h2>
+      <p class="subtitle is-6 has-text-centered method-lead">
+        Three training-time components that turn monocular-cue fragile sparse-view 3DGS into a
+        scale-aware, cross-view-consistent reconstruction pipeline.
+      </p>
+
+      <!-- (a) Stereo Depth Regularization -->
+      <div class="method-block">
+        <div class="method-content">
+          <div class="method-tag">A</div>
+          <h3 class="method-title">Stereo Depth Regularization</h3>
+          <p>
+            For each training view treated as the left camera, we synthesize a virtual right camera via
+            horizontal translation and render the corresponding right-view image from the current 3D
+            Gaussians. Feeding the ground-truth left image and the rendered right view into
+            <strong>FoundationStereo</strong> produces a left-view disparity that we convert to depth
+            <code>Z<sub>stereo</sub> = fd/D&#770;<sub>l</sub></code> and supervise against the rendered depth
+            in <em>inverse</em>-depth space.
+          </p>
+          <p>
+            To prevent noisy priors from corrupting geometry, we filter pixels with a
+            <strong>left-right consistency check</strong>, a <strong>background mask</strong>, and a
+            <strong>disparity anomaly mask</strong>, fused into a final validity mask
+            <code>M<sub>valid</sub></code>. The resulting loss reads
+          </p>
+          <p class="method-equation">
+            <code>L<sub>depth</sub> = ‖ M<sub>valid</sub> ⊙ (1/Z&#770; − 1/Z<sub>stereo</sub>) ‖<sub>1</sub></code>
+          </p>
+          <p>
+            Unlike photometric warping, this directly pushes Gaussian primitives toward scale-accurate
+            and cross-view-consistent geometry.
+          </p>
+        </div>
+      </div>
+
+      <!-- (b) Gradient-Aware Opacity Decay -->
+      <div class="method-block">
+        <div class="method-content">
+          <div class="method-tag">B</div>
+          <h3 class="method-title">Gradient-Aware Opacity Decay</h3>
+          <p>
+            We argue that an opacity gradient magnitude inherently reflects a Gaussian's contribution to
+            reconstruction: <em>large</em> gradient → important; <em>negligible</em> gradient → redundant
+            floater. Because raw opacity gradients are tiny (∼10<sup>−6</sup>), we adopt a
+            <strong>relative</strong> gradient <code>β = g/ḡ</code> (inspired by GRPO in DeepSeekMath) and
+            use an exponential soft-threshold to produce the dynamic decay factor
+          </p>
+          <p class="method-equation">
+            <code>γ = 1 − (1 − γ<sub>base</sub>) · exp(−s · β)</code>,
+            &nbsp; <code>α̂ = γ · α</code>
+          </p>
+          <p>
+            Gaussians with below-average gradients are heavily penalized (background floaters get
+            pruned), while above-average valid surfaces are quickly retained. Default:
+            <code>γ<sub>base</sub> = 0.99</code>, <code>s = 0.5</code>.
+          </p>
+        </div>
+      </div>
+
+      <!-- (c) Consistency-Aware Dense Initialization -->
+      <div class="method-block">
+        <div class="method-content">
+          <div class="method-tag">C</div>
+          <h3 class="method-title">Consistency-Aware Dense Initialization</h3>
+          <p>
+            Sparse SfM points are insufficient under few-view conditions. We instead run the
+            <strong>zero-shot MVS model MVSAnywhere</strong> on every training view (as target) with the
+            remaining views as sources to obtain a set of cross-view-consistent depth maps. Cross-view
+            reprojection errors are then used to filter outliers, and the filtered depths are
+            back-projected and fused into a <strong>dense</strong>, reliable point cloud as the Gaussian
+            initialization.
+          </p>
+          <p>
+            The strong zero-shot generalization of MVSAnywhere makes this initialization significantly
+            denser and cleaner than PDCNet+ and MVSFormer on in-the-wild scenes.
+          </p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+
+  <!-- ==================== VISUAL COMPARISONS ==================== -->
+  <section class="section hero is-light results-section">
+    <div class="container is-max-desktop">
+      <h2 class="title is-3 has-text-centered">Visual Comparisons</h2>
+      <p class="subtitle is-6 has-text-centered">
+        Novel view synthesis and rendered depth on four standard benchmarks. Zoom in for details.
+      </p>
+
+      <div class="result-block">
+        <h3 class="result-title">LLFF &nbsp;<span class="result-meta">3 views &middot; 1/8 resolution</span></h3>
+        <img src="static/images/vis_llff.jpg" alt="Visual comparison on LLFF" class="result-image" loading="lazy"/>
+        <p class="result-caption">
+          On <em>fern</em> and <em>trex</em>, vanilla 3DGS shows severe patchy artifacts; monocular-depth
+          methods (DNGaussian, FSGS) recover rough geometry but fail on fine structure. MVPGS and
+          Binocular3DGS still produce artifacts in textureless regions. StereoGS reconstructs clean
+          surface skeletons (e.g., the <em>trex</em>) and crisp depth.
+        </p>
+      </div>
+
+      <div class="result-block">
+        <h3 class="result-title">DTU &nbsp;<span class="result-meta">3 views &middot; 1/4 resolution</span></h3>
+        <img src="static/images/vis_dtu.jpg" alt="Visual comparison on DTU" class="result-image" loading="lazy"/>
+        <p class="result-caption">
+          DNGaussian, FSGS, and MVPGS produce blurry results; Binocular3DGS shows textureless-region
+          artifacts due to its self-supervised photometric loss. StereoGS delivers sharp details and
+          accurate depth on all three scenes.
+        </p>
+      </div>
+
+      <div class="result-block">
+        <h3 class="result-title">Mip-NeRF360 &nbsp;<span class="result-meta">12–24 views &middot; 1/8 resolution</span></h3>
+        <img src="static/images/vis_mipnerf.jpg" alt="Visual comparison on Mip-NeRF360" class="result-image" loading="lazy"/>
+        <p class="result-caption">
+          On the <em>bicycle</em> and <em>stump</em> scenes, baseline methods (FSGS, CoR-GS, DropGaussian)
+          exhibit prominent artifacts in large textureless grass areas. StereoGS preserves the
+          high-frequency details and produces the most coherent depth maps.
+        </p>
+      </div>
+
+      <div class="result-block">
+        <h3 class="result-title">Blender &nbsp;<span class="result-meta">8 views &middot; 1/2 resolution</span></h3>
+        <img src="static/images/vis_blender.jpg" alt="Visual comparison on Blender" class="result-image" loading="lazy"/>
+        <p class="result-caption">
+          On the synthetic Blender dataset, StereoGS consistently outperforms all baselines across
+          PSNR/SSIM/LPIPS, demonstrating its capability in object-centric sparse-view reconstruction.
+        </p>
+      </div>
+    </div>
+  </section>
+
+
+  <!-- ==================== QUANTITATIVE RESULTS ==================== -->
+  <section class="section quant-section">
+    <div class="container is-max-desktop">
+      <h2 class="title is-3 has-text-centered">Quantitative Results</h2>
+      <p class="subtitle is-6 has-text-centered">
+        StereoGS achieves state-of-the-art PSNR / SSIM / LPIPS across LLFF, DTU, Mip-NeRF360 and Blender
+        under every sparse-view configuration tested. <em>Ours<sup>*</sup></em> denotes the variant with
+        a fixed dropout rate of 0.3.
+      </p>
+
+      <!-- Quantitative table: LLFF + DTU side by side -->
+      <div class="columns is-centered">
+        <div class="column">
+          <h4 class="quant-table-title">LLFF (3 / 6 / 9 views)</h4>
+          <div class="quant-table-wrapper">
+            <table class="table is-narrow is-bordered is-striped quant-table">
+              <thead>
+                <tr><th>Method</th><th>3-view<br>PSNR↑</th><th>6-view<br>PSNR↑</th><th>9-view<br>PSNR↑</th></tr>
+              </thead>
+              <tbody>
+                <tr><td>3DGS</td><td>16.02</td><td>19.45</td><td>21.13</td></tr>
+                <tr><td>DNGaussian</td><td>19.12</td><td>22.18</td><td>23.17</td></tr>
+                <tr><td>FSGS</td><td>20.31</td><td>24.20</td><td>25.32</td></tr>
+                <tr><td>CoR-GS</td><td>20.45</td><td>24.49</td><td>26.06</td></tr>
+                <tr><td>MVPGS</td><td>20.54</td><td>23.64</td><td>24.23</td></tr>
+                <tr><td>DropGaussian</td><td>20.76</td><td>24.74</td><td>26.21</td></tr>
+                <tr><td>NexusGS</td><td>21.07</td><td>–</td><td>–</td></tr>
+                <tr><td>Binocular3DGS</td><td>21.44</td><td>24.87</td><td>26.17</td></tr>
+                <tr><td>D<sup>2</sup>GS</td><td>21.35</td><td>24.84</td><td>–</td></tr>
+                <tr class="row-second"><td><strong>StereoGS (Ours)</strong></td><td>21.91</td><td>24.92</td><td>26.25</td></tr>
+                <tr class="row-best"><td><strong>StereoGS (Ours<sup>*</sup>)</strong></td><td>22.05</td><td>25.40</td><td>26.44</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <div class="column">
+          <h4 class="quant-table-title">DTU (3 / 6 / 9 views)</h4>
+          <div class="quant-table-wrapper">
+            <table class="table is-narrow is-bordered is-striped quant-table">
+              <thead>
+                <tr><th>Method</th><th>3-view<br>PSNR↑</th><th>6-view<br>PSNR↑</th><th>9-view<br>PSNR↑</th></tr>
+              </thead>
+              <tbody>
+                <tr><td>3DGS</td><td>10.99</td><td>20.33</td><td>22.90</td></tr>
+                <tr><td>DNGaussian</td><td>18.91</td><td>22.10</td><td>23.94</td></tr>
+                <tr><td>FSGS</td><td>17.34</td><td>21.55</td><td>24.33</td></tr>
+                <tr><td>CoR-GS</td><td>19.21</td><td>24.51</td><td>27.18</td></tr>
+                <tr><td>MVPGS</td><td>20.65</td><td>23.98</td><td>26.45</td></tr>
+                <tr><td>NexusGS</td><td>20.21</td><td>–</td><td>–</td></tr>
+                <tr><td>Binocular3DGS</td><td>20.71</td><td>24.31</td><td>26.70</td></tr>
+                <tr class="row-second"><td><strong>StereoGS (Ours)</strong></td><td>21.46</td><td>24.86</td><td>26.83</td></tr>
+                <tr class="row-best"><td><strong>StereoGS (Ours<sup>*</sup>)</strong></td><td>22.00</td><td>25.41</td><td>27.39</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <div class="columns is-centered">
+        <div class="column is-half">
+          <h4 class="quant-table-title">Mip-NeRF360 (12 / 24 views)</h4>
+          <div class="quant-table-wrapper">
+            <table class="table is-narrow is-bordered is-striped quant-table">
+              <thead>
+                <tr><th>Method</th><th>12-view<br>PSNR↑</th><th>24-view<br>PSNR↑</th></tr>
+              </thead>
+              <tbody>
+                <tr><td>3DGS</td><td>18.52</td><td>22.80</td></tr>
+                <tr><td>FSGS</td><td>18.80</td><td>23.28</td></tr>
+                <tr><td>CoR-GS</td><td>19.52</td><td>23.39</td></tr>
+                <tr><td>DropGaussian</td><td>19.74</td><td>24.05</td></tr>
+                <tr><td>D<sup>2</sup>GS</td><td>20.09</td><td>24.13</td></tr>
+                <tr class="row-second"><td><strong>StereoGS (Ours)</strong></td><td>20.25</td><td>24.18</td></tr>
+                <tr class="row-best"><td><strong>StereoGS (Ours<sup>*</sup>)</strong></td><td>20.51</td><td>24.25</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <div class="column is-half">
+          <h4 class="quant-table-title">Blender (8 views)</h4>
+          <div class="quant-table-wrapper">
+            <table class="table is-narrow is-bordered is-striped quant-table">
+              <thead>
+                <tr><th>Method</th><th>PSNR↑</th><th>SSIM↑</th><th>LPIPS↓</th></tr>
+              </thead>
+              <tbody>
+                <tr><td>3DGS</td><td>23.20</td><td>0.870</td><td>0.104</td></tr>
+                <tr><td>DNGaussian</td><td>24.31</td><td>0.886</td><td>0.088</td></tr>
+                <tr><td>FSGS</td><td>24.64</td><td>0.895</td><td>0.095</td></tr>
+                <tr><td>CoR-GS</td><td>24.43</td><td>0.896</td><td>0.084</td></tr>
+                <tr><td>Binocular3DGS</td><td>24.71</td><td>0.872</td><td>0.101</td></tr>
+                <tr class="row-second"><td><strong>StereoGS (Ours)</strong></td><td>24.83</td><td>0.899</td><td>0.081</td></tr>
+                <tr class="row-best"><td><strong>StereoGS (Ours<sup>*</sup>)</strong></td><td>25.04</td><td>0.899</td><td>0.078</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <p class="quant-note">
+        Full PSNR/SSIM/LPIPS for every configuration is reported in the
+        <a href="static/pdfs/stereogs_paper.pdf" target="_blank">paper</a> and
+        <a href="static/pdfs/stereogs_supp.pdf" target="_blank">supplementary material</a>.
+      </p>
+    </div>
+  </section>
+
+
+  <!-- ==================== ABLATION STUDIES ==================== -->
+  <section class="section hero is-light ablation-section">
+    <div class="container is-max-desktop">
+      <h2 class="title is-3 has-text-centered">Ablation Studies</h2>
+      <p class="subtitle is-6 has-text-centered">
+        Each component contributes measurably; the full model achieves the best PSNR/SSIM/LPIPS.
+      </p>
+
+      <img src="static/images/vis_ablation.jpg" alt="Ablation visual comparison" class="result-image" loading="lazy"/>
+      <p class="result-caption">
+        Effect of incrementally adding Consistency-Aware Dense Initialization (CI), Stereo Depth
+        Regularization (SDR), and Gradient-Aware Opacity Decay (GOD). CI gives a strong geometric
+        foundation (depth holes still present in fine details); SDR fills the holes and smooths the
+        background; GOD finally prunes the remaining floaters around foreground boundaries.
+      </p>
+
+      <h4 class="quant-table-title" style="margin-top:2rem;">Component Ablation (LLFF / DTU, 3 views)</h4>
+      <div class="quant-table-wrapper">
+        <table class="table is-narrow is-bordered is-striped quant-table ablation-table">
+          <thead>
+            <tr>
+              <th>CI</th><th>SDR</th><th>GOD</th>
+              <th>LLFF<br>PSNR↑</th><th>LLFF<br>SSIM↑</th><th>LLFF<br>LPIPS↓</th>
+              <th>DTU<br>PSNR↑</th><th>DTU<br>SSIM↑</th><th>DTU<br>LPIPS↓</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr><td>✗</td><td>✗</td><td>✗</td><td>16.02</td><td>0.465</td><td>0.378</td><td>10.99</td><td>0.585</td><td>0.313</td></tr>
+            <tr><td>✓</td><td>✗</td><td>✗</td><td>19.75</td><td>0.691</td><td>0.215</td><td>14.10</td><td>0.786</td><td>0.196</td></tr>
+            <tr><td>✗</td><td>✓</td><td>✗</td><td>17.32</td><td>0.524</td><td>0.317</td><td>12.46</td><td>0.697</td><td>0.208</td></tr>
+            <tr><td>✗</td><td>✗</td><td>✓</td><td>18.18</td><td>0.569</td><td>0.291</td><td>15.05</td><td>0.751</td><td>0.202</td></tr>
+            <tr><td>✗</td><td>✓</td><td>✓</td><td>18.96</td><td>0.605</td><td>0.262</td><td>17.66</td><td>0.784</td><td>0.172</td></tr>
+            <tr><td>✓</td><td>✓</td><td>✗</td><td>19.79</td><td>0.695</td><td>0.214</td><td>15.57</td><td>0.812</td><td>0.166</td></tr>
+            <tr><td>✓</td><td>✗</td><td>✓</td><td>21.18</td><td>0.741</td><td>0.171</td><td>19.76</td><td>0.863</td><td>0.112</td></tr>
+            <tr class="row-best"><td>✓</td><td>✓</td><td>✓</td><td><strong>21.91</strong></td><td><strong>0.773</strong></td><td><strong>0.157</strong></td><td><strong>21.46</strong></td><td><strong>0.879</strong></td><td><strong>0.099</strong></td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </section>
+
+
+  <!-- ==================== DEEPER ANALYSIS ==================== -->
+  <section class="section deeper-section">
+    <div class="container is-max-desktop">
+      <h2 class="title is-3 has-text-centered">Deeper Analysis</h2>
+
+      <div class="result-block">
+        <h3 class="result-title">Initialization point clouds</h3>
+        <img src="static/images/pcd_vis.jpg" alt="Initialization point cloud comparison" class="result-image" loading="lazy"/>
+        <p class="result-caption">
+          Compared to sparse SfM and other learning-based matchers (PDCNet+, MVSFormer), MVSAnywhere
+          produces the densest, most uniformly distributed, and structurally most complete point clouds
+          across the <em>fern</em>, <em>horns</em>, <em>fortress</em>, and <em>room</em> scenes.
+        </p>
+      </div>
+
+      <div class="result-block">
+        <h3 class="result-title">MVS model ablation</h3>
+        <img src="static/images/ablation_mvs.jpg" alt="MVS model ablation" class="result-image" loading="lazy"/>
+        <p class="result-caption">
+          Swapping the initialization MVS model: SfM (sparse, 18.96 / 17.66 dB on LLFF / DTU) →
+          PDCNet+ (20.10 / 19.81) → MVSFormer (21.08 / 20.71) → <strong>MVSAnywhere</strong>
+          (<strong>21.91 / 21.46</strong>). MVSAnywhere's zero-shot generalization removes the
+          pre-training domain gap and gives the best geometric foundation.
+        </p>
+      </div>
+
+      <div class="columns is-centered">
+        <div class="column">
+          <div class="result-block">
+            <h3 class="result-title">Stereo model ablation</h3>
+            <img src="static/images/ablation_stereo.jpg" alt="Stereo model ablation" class="result-image" loading="lazy"/>
+            <p class="result-caption">
+              The Stereo Depth Regularization is a universal module: plugging in S2M2 or LiteAnyStereo
+              also improves over the no-stereo baseline. FoundationStereo (default) yields the sharpest
+              details and fewest artifacts.
+            </p>
+          </div>
+        </div>
+        <div class="column">
+          <div class="result-block">
+            <h3 class="result-title">Validity mask ablation</h3>
+            <img src="static/images/ablation_valid_mask.jpg" alt="Validity mask ablation" class="result-image" loading="lazy"/>
+            <p class="result-caption">
+              Without <code>M<sub>valid</sub></code>, noisy priors in occluded / textureless regions
+              misguide the optimization, producing floaters and distorted geometry (e.g., the
+              <em>trex</em> skeleton). Our mask keeps supervision strictly on reliable pixels.
+            </p>
+          </div>
+        </div>
+      </div>
+
+      <div class="result-block">
+        <h3 class="result-title">Opacity decay strategies</h3>
+        <div class="columns is-centered">
+          <div class="column is-half">
+            <img src="static/images/ablation_opacity.jpg" alt="Opacity decay visual comparison" class="result-image" loading="lazy"/>
+            <img src="static/images/opacity_gradients_std.jpg" alt="Opacity gradient statistics" class="result-image" loading="lazy" style="margin-top:1rem;"/>
+          </div>
+          <div class="column is-half">
+            <img src="static/images/curve_opacity_ablation.jpg" alt="Decay function curves" class="result-image" loading="lazy"/>
+            <p class="result-caption">
+              <strong>Left:</strong> Constant decay indiscriminately kills useful geometry; Step /
+              Linear fail to penalize moderate-to-high gradient floaters. <strong>Top-right:</strong>
+              decay function shapes. <strong>Bottom-right:</strong> raw opacity gradients are
+              extremely small (∼10<sup>−6</sup>), which is why using the relative gradient
+              <code>β = g/ḡ</code> is necessary.
+            </p>
+          </div>
+        </div>
+        <p class="result-caption">
+          When the exponential is applied to raw <code>g</code> instead of <code>β</code>, the
+          exponential term <code>exp(−s·g) ≈ 1.0</code> and the function degenerates to a constant
+          (Exp-<code>g</code> ≈ 21.41 dB). Using the <strong>relative</strong> gradient <code>β</code>
+          — inspired by the relative-advantage idea in GRPO (DeepSeekMath) — provides a
+          scale-invariant normalization that lets our Exp-<code>β</code> reach <strong>21.91 dB</strong>
+          on LLFF 3-view.
+        </p>
+      </div>
+    </div>
+  </section>
+
+
+  <!-- ==================== LIMITATIONS / FAILURE CASES ==================== -->
+  <section class="section hero is-light limitations-section">
+    <div class="container is-max-desktop">
+      <h2 class="title is-3 has-text-centered">Limitations &amp; Failure Cases</h2>
+      <p class="subtitle is-6 has-text-centered">
+        Honest accounting of where StereoGS still struggles.
+      </p>
+      <img src="static/images/failure_cases.jpg" alt="Failure cases" class="result-image" loading="lazy"/>
+      <p class="result-caption">
+        <strong>Left:</strong> Consistency-Aware Dense Initialization may fail on reflective objects
+        on a specific view, because view-dependent reflections make MVS depths be filtered out by
+        reprojection filtering. <strong>Right:</strong> Large textureless regions can make stereo
+        matching ambiguous, producing erroneous stereo depth and inaccurate geometric constraints.
+        Addressing these two failure modes is a promising direction for future work.
+      </p>
+    </div>
+  </section>
+
+
+  <!-- ==================== CITATION / BIBTEX ==================== -->
+  <section class="section" id="BibTeX">
+    <div class="container is-max-desktop content">
+      <div class="bibtex-header">
+        <h2 class="title">BibTeX</h2>
+        <button class="copy-bibtex-btn" onclick="copyBibTeX()" title="Copy BibTeX to clipboard">
+          <i class="fas fa-copy"></i>
+          <span class="copy-text">Copy</span>
+        </button>
+      </div>
+      <pre id="bibtex-code"><code>@inproceedings{yuan2026stereogs,
+  title     = {{StereoGS}: Sparse-View 3D Gaussian Splatting via Stereo Priors},
+  author    = {Yuan, Wenhao and Ge, Yiyuan and Cai, Deli},
+  booktitle = {European Conference on Computer Vision (ECCV)},
+  year      = {2026},
+  url       = {https://github.com/StringerYwh00/StereoGS}
+}</code></pre>
+    </div>
+</section>
+<!--End BibTeX citation -->
+
+
+  <footer class="footer">
+    <div class="container">
+      <div class="columns is-centered">
+        <div class="column is-8">
+          <div class="content">
+            <p>
+              This page was built using the
+              <a href="https://github.com/eliahuhorwitz/Academic-project-page-template" target="_blank">Academic Project Page Template</a>,
+              adopted from the <a href="https://nerfies.github.io" target="_blank">Nerfies</a> project page.
+              You are free to borrow the source code of this website; we just ask that you link back to
+              this page in the footer.
+            </p>
+            <p>
+              <a rel="license" href="http://creativecommons.org/licenses/by-sa/4.0/" target="_blank">Creative
+              Commons Attribution-ShareAlike 4.0 International License</a>.
+            </p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </footer>
+
+  </body>
+</html>

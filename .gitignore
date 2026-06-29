@@ -1,0 +1,16 @@
+# OS
+.DS_Store
+Thumbs.db
+
+# Editor
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Local server log
+*.log
+
+# 不要忽略图片和 PDF（项目需要）
+!static/images/
+!static/pdfs/
