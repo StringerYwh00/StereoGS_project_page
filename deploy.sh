@@ -24,7 +24,7 @@ if [ $# -lt 1 ]; then
 fi
 
 GH_USER="$1"
-REPO_NAME="${2:-stereogs}"
+REPO_NAME="${2:-StereoGS_project_page}"
 REMOTE_URL="https://github.com/${GH_USER}/${REPO_NAME}.git"
 PAGES_URL="https://${GH_USER}.github.io/${REPO_NAME}/"
 
